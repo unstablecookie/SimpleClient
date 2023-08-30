@@ -6,6 +6,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.HttpEntity;
+import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.util.EntityUtils;
@@ -26,6 +27,8 @@ import org.apache.http.NameValuePair;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.http.Header;
+import org.apache.http.message.BasicHeader;
 import org.apache.http.HttpEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
@@ -69,15 +72,22 @@ public class Sender {
 		 
 		 //TEST POST file
 		 URI addressFile = new URI("http://localhost:8000/testfile");
-		 File file = new File("/168.jpg");
+		 File file = new File("168.jpg");
 		 CloseableHttpClient httpclient = HttpClients.createDefault();
 		 try{
 			 HttpPost httppost = new HttpPost(addressFile);
-			 FileBody bin = new FileBody(file);
+			 System.out.println("file.length():"+file.length());
+			 //custom header
+			 Header header = new BasicHeader("Real-length",String.valueOf(file.length()));
+			 httppost.addHeader(header);
 			 HttpEntity httpentity = MultipartEntityBuilder.create()
-					 .addPart("bin", bin)
+					 //.addTextBody("text", String.valueOf(file.length()))
+					 //.addTextBody("text", "")
+					 .setMode(HttpMultipartMode.RFC6532)
+					 .addBinaryBody("my file", file)
 					 .build();
 			 httppost.setEntity(httpentity);
+			 
 			 CloseableHttpResponse response = httpclient.execute(httppost);
 			 try {
 				 System.out.println(response.getStatusLine().getStatusCode());
