@@ -37,11 +37,10 @@ import java.io.ByteArrayInputStream;
 
 
 public class Sender {
-	 public static void main(String[] args) throws URISyntaxException,ClientProtocolException,IOException {
+	 public static void mainOld() throws URISyntaxException,ClientProtocolException,IOException {
 		 
 		 //TEST GET
-		 //URI address = new URI("http", null, "localhost", 8000, "/test", null, null);
-		 //HttpGet httpget = new HttpGet("http://localhost");
+
 		 URI addressGet = new URI("http://localhost:8000/testget");
 		 try (CloseableHttpClient httpclient = HttpClients.createDefault();){
 			 HttpGet httpget = new HttpGet(addressGet);
@@ -81,8 +80,6 @@ public class Sender {
 			 Header header = new BasicHeader("Real-length",String.valueOf(file.length()));
 			 httppost.addHeader(header);
 			 HttpEntity httpentity = MultipartEntityBuilder.create()
-					 //.addTextBody("text", String.valueOf(file.length()))
-					 //.addTextBody("text", "")
 					 .setMode(HttpMultipartMode.RFC6532)
 					 .addBinaryBody("my file", file)
 					 .build();

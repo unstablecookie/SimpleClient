@@ -44,7 +44,7 @@
                 <configuration>
 					<archive>
                         <manifest>
-                            <mainClass>top.kek.Sender</mainClass>
+                            <mainClass>top.kek.Entry</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
