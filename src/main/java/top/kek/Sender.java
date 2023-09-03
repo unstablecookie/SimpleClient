@@ -35,7 +35,7 @@ import org.apache.http.entity.InputStreamEntity;
 
 import java.io.ByteArrayInputStream;
 
-
+@Deprecated
 public class Sender {
 	 public static void mainOld() throws URISyntaxException,ClientProtocolException,IOException {
 		 

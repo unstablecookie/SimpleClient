@@ -10,7 +10,10 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
+import java.io.StringWriter;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 
 import org.apache.http.client.ClientProtocolException;
 
@@ -21,31 +24,32 @@ import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 
 public class FileSender implements Runnable {
-	File file;
+	String fileString;
 	URI connection;
 	
-	public FileSender(File file,String connection) throws URISyntaxException {
-		this.file = file;
+	public FileSender(String fileString,String connection) throws URISyntaxException {
+		this.fileString = fileString;
 		this.connection = new URI(connection);
 	}
 	
 	@Override
 	public void run()  {//throws ClientProtocolException,IOException
+		File file = new File(fileString);
 		CloseableHttpClient httpclient = HttpClients.createDefault();
 		HttpPost httppost = new HttpPost(connection);
-		System.out.println("file.length():"+file.length());
 		//custom header
-		httppost.addHeader(new BasicHeader("Real-length",String.valueOf(file.length())));
+		httppost.addHeader(new BasicHeader("Real-length",String.valueOf(file.length())));//my value to process binary data later
 		httppost.addHeader(new BasicHeader("File-name",file.getName()));
 		HttpEntity httpentity = MultipartEntityBuilder.create()
 					 .setMode(HttpMultipartMode.RFC6532)
 					 .addBinaryBody("my file", file)
 					 .build();
 		httppost.setEntity(httpentity);
-			 
+		int responceCode = 0;
 		try {
 			CloseableHttpResponse response = httpclient.execute(httppost);
-			System.out.println(response.getStatusLine().getStatusCode());
+			responceCode = response.getStatusLine().getStatusCode();
+			System.out.println("responceCode:"+responceCode);
 			HttpEntity responceEntity = response.getEntity();
 			response.close();
 			if (responceEntity != null) {
@@ -62,5 +66,26 @@ public class FileSender implements Runnable {
 			 }catch(IOException e) {
 				 e.printStackTrace();
 			 }
+			 if(responceCode!=200) {
+				 try {
+					 failedJobs(fileString);
+				 }catch(IOException e) {
+					 e.printStackTrace();
+				 }
+			 }
+	}
+	
+	public void failedJobs(String fileString) throws IOException {
+		File failedFile = new File("failedFile");
+		if(!failedFile.exists()) {
+			failedFile.createNewFile();
+		}
+		try(BufferedWriter out = new BufferedWriter(new FileWriter(failedFile))) {
+			out.write(fileString);
+			out.newLine();
+			out.close();
+		}catch(IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

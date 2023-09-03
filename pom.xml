@@ -6,7 +6,7 @@
 
   <groupId>top.kek</groupId>
   <artifactId>SimpleClient</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
 
   <name>SimpleClient</name>
 	<description>SimpleClient</description>
