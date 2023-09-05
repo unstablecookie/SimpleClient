@@ -1,7 +1,9 @@
 package top.kek;
 
+import top.kek.FileSender;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.nio.file.FileSystems;
 
@@ -38,10 +40,12 @@ public class Entry {
 	
 	static File dir = new File("D:\\Java\\jars\\files");
 	
-	static Set<String> failedJobs  = new HashSet<>();
+	static int timer = 120000;
+	
+	static LocalTime startTime;
 	
 	public static void main(String[] args) {
-		LocalTime startTime= LocalTime.now();
+		startTime= LocalTime.now();
 		//replacing hostName and dir with arguments
 		if(args.length>0) {
 			hostName = args[0];
@@ -71,14 +75,6 @@ public class Entry {
 		updateWorkingQueue(setList);//updating working queue
 		
 		PostWorker.pushFileUpload();//push data with 4 threads
-		
-		try {
-			updateFileTable();
-		}catch(IOException e) {
-			e.printStackTrace();
-		}
-		LocalTime endTime = LocalTime.now();
-		System.out.println(((double)(endTime.toNanoOfDay() - startTime.toNanoOfDay()))/(double)1000000000);//
 	}
 	static void updateWorkingQueue(List<String> list) {
 		synchronized(queue) {
@@ -105,13 +101,16 @@ public class Entry {
 		if(!fileTable.exists()) {
 			fileTable.createNewFile();
 		}
-		BufferedWriter out = new BufferedWriter(new FileWriter(fileTable));
-		Iterator it = set.iterator();
-		while(it.hasNext()) {
-			out.write(String.valueOf(it.next()));
-			out.newLine();
+			
+		synchronized(set) {
+			BufferedWriter out = new BufferedWriter(new FileWriter(fileTable));
+			Iterator it = set.iterator();
+			while(it.hasNext()) {
+				out.write(String.valueOf(it.next()));
+				out.newLine();
+			}
+			out.close();
 		}
-		out.close();
 	}
 	
 	static class PostWorker{
@@ -134,7 +133,7 @@ public class Entry {
 							.append(portNumber)
 							.append("/testfile");
 					try {
-						executor.execute(new FileSender(file,builder.toString()));
+						executor.execute(new top.kek.FileSender(file,builder.toString()));
 					}catch(URISyntaxException e) {
 						e.printStackTrace();
 					}
@@ -143,8 +142,15 @@ public class Entry {
 			executor.shutdown();
 			
 			try {
-				if(!executor.awaitTermination(120000, TimeUnit.MILLISECONDS)) {
+				if(!executor.awaitTermination(timer, TimeUnit.MILLISECONDS)) {
 					executor.shutdownNow();
+					try {//write copied files to file
+						updateFileTable();
+					}catch(IOException e) {
+						e.printStackTrace();
+					}
+					LocalTime endTime = LocalTime.now();
+					System.out.println(((double)(endTime.toNanoOfDay() - Entry.startTime.toNanoOfDay()))/(double)1000000000);//
 					System.exit(0);
 				}
 			}catch(InterruptedException e) {

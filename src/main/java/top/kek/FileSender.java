@@ -10,17 +10,17 @@ import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
-import java.io.StringWriter;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
 
 import org.apache.http.client.ClientProtocolException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 
-import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 
 public class FileSender implements Runnable {
@@ -77,15 +77,15 @@ public class FileSender implements Runnable {
 	
 	public void failedJobs(String fileString) throws IOException {
 		File failedFile = new File("failedFile");
-		if(!failedFile.exists()) {
-			failedFile.createNewFile();
+		
+		Files.writeString(Paths.get(failedFile.toURI()),
+				fileString+ "\n",
+				StandardCharsets.UTF_8,
+				StandardOpenOption.CREATE,
+				StandardOpenOption.APPEND);
+		synchronized(Entry.set) {
+			if(Entry.set.contains(fileString)) Entry.set.remove(fileString);
 		}
-		try(BufferedWriter out = new BufferedWriter(new FileWriter(failedFile))) {
-			out.write(fileString);
-			out.newLine();
-			out.close();
-		}catch(IOException e) {
-			e.printStackTrace();
-		}
+		
 	}
 }
