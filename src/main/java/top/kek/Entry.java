@@ -140,24 +140,24 @@ public class Entry {
 				}
 			}
 			executor.shutdown();
-			
 			try {
 				if(!executor.awaitTermination(timer, TimeUnit.MILLISECONDS)) {
 					executor.shutdownNow();
-					try {//write copied files to file
-						updateFileTable();
-					}catch(IOException e) {
-						e.printStackTrace();
-					}
-					LocalTime endTime = LocalTime.now();
-					System.out.println(((double)(endTime.toNanoOfDay() - Entry.startTime.toNanoOfDay()))/(double)1000000000);//
-					System.exit(0);
+					if (!executor.awaitTermination(timer, TimeUnit.MILLISECONDS))
+		                System.err.println("executor did not terminate");
 				}
 			}catch(InterruptedException e) {
 				e.printStackTrace();
+				executor.shutdownNow();
+				Thread.currentThread().interrupt();
 			}
-			
-			
+			try {//write copied files to file
+				updateFileTable();
+			}catch(IOException e) {
+				e.printStackTrace();
+			}
+			LocalTime endTime = LocalTime.now();
+			System.out.println(((double)(endTime.toNanoOfDay() - Entry.startTime.toNanoOfDay()))/(double)1000000000);		
 		}
 	}
 	
